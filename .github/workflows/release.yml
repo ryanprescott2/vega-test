@@ -1,0 +1,51 @@
+on:
+  workflow_dipatch:
+    branches:
+      - master
+    inputs:
+      description: 'major, minor, or patch'
+      required: true
+      default: 'patch'
+env:
+  GITNAME: ci
+  GITEMAIL: ci@unspun.io
+  VERSIONFILE: version.py
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build bundle
+    steps:
+    - name: Checkout repositories
+      uses: actions/checkout@v2
+    - name: Mark version
+      id: version
+      run: |
+       v=`grep "VERSION=" ${{ env.VERSIONFILE }} | cut -d '"' -f 2 | cut -d '"' -f 1`
+       a=`echo $v | cut -d '.' -f 1`
+       b=`echo $v | cut -d '.' -f 2`
+       c=`echo $v | cut -d '.' -f 3`
+       t=${{ github.event.inputs.type }}
+       if [ $t = "patch" ] ; then
+         c=$(expr $c + 1)
+       else
+       if [ $t = "minor" ] ; then
+         b=$(expr $b + 1)
+         c="0"
+       else
+       if [ $t = "major" ] ; then
+         a=$(expr $a + 1)
+         b="0"
+         c="0"
+       else
+         exit 1
+       fi
+       fi
+       fi
+       v="$a.$b.$c"
+       echo "::set-output name=version::$v"
+       sed -i "/VERSION=/c\ \ \ \ VERSION=\"$v\"" ${{ env.VERSIONFILE }}
+       git config --global user.name ${{ env.GITNAME }}
+       git config --global user.email ${{ env.GITEMAIL }}
+       git add ${{ env.VERSIONFILE }}
+       git commit -m "[no ci] Set version."
+       git push origin
