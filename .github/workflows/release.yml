@@ -1,7 +1,7 @@
 on:
   workflow_dispatch:
     branches:
-      - master
+      - main
     inputs:
       description: 'major, minor, or patch'
       required: true
