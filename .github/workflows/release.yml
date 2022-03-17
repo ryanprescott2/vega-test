@@ -1,5 +1,5 @@
 on:
-  workflow_dipatch:
+  workflow_dispatch:
     branches:
       - master
     inputs:
